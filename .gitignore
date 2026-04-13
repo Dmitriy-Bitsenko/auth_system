@@ -1,0 +1,49 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Database
+db.sqlite3
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Static & Media (generated)
+staticfiles/
+media/
+
+# Translations
+*.mo
+
+# Documentation & Planning
+PLAN.md
+LOG.md
+ТЗ*.docx
+
+# OS
+.DS_Store
+Thumbs.db
