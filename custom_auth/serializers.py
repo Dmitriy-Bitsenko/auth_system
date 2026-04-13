@@ -57,13 +57,11 @@ class RegisterSerializer(serializers.Serializer):
         user.save()
 
         # Сохраняем bcrypt-хеш напрямую в поле password
-        # Django хранит пароли в формате: <алгоритм>$<соли>$<хеш>
-        # Нам нужно разобрать bcrypt-хеш на части
-        hash_str = password_hash.decode("utf-8")
         # bcrypt формат: $2b$12$salt+hash
-        parts = hash_str.split("$")
+        hash_str = password_hash.decode("utf-8")
         # parts = ['', '2b', '12', 'salt+hash']
-        django_format = f"bcrypt${parts[1]}${parts[3]}"
+        parts = hash_str.split("$")
+        django_format = f"bcrypt${parts[1]}${parts[2]}${parts[3]}"
         user.password = django_format
         user.save()
 
@@ -94,13 +92,13 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError({"email": "Аккаунт заблокирован"})
 
         # bcrypt.checkpw сравнивает введённый пароль с хешем из БД
-        # Django хранит: bcrypt$2b$salt+hash
-        stored_password = user.password  # "bcrypt$2b$xxxxx"
+        # Django хранит: bcrypt$2b$12$salt+hash
+        stored_password = user.password
 
         # Разбираем django-формат обратно в bcrypt-строку
         parts = stored_password.split("$")
-        # parts = ["bcrypt", "2b", "salt+hash"]
-        bcrypt_hash = f"${parts[1]}${parts[2]}"
+        # parts = ["bcrypt", "2b", "12", "salt+hash"]
+        bcrypt_hash = f"${parts[1]}${parts[2]}${parts[3]}"
 
         if not bcrypt.checkpw(password.encode("utf-8"), bcrypt_hash.encode("utf-8")):
             raise serializers.ValidationError({"email": "Неверный email или пароль"})
