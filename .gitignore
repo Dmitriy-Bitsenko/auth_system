@@ -26,6 +26,9 @@ ENV/
 # Database
 db.sqlite3
 
+# Temp files
+token.txt
+
 # Testing & Coverage
 .pytest_cache/
 .coverage

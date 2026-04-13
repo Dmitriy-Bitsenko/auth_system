@@ -56,6 +56,8 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    # Custom JWT — должен быть до стандартного auth middleware
+    "custom_auth.middleware.JWTAuthenticationMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -133,9 +135,11 @@ AUTH_USER_MODEL = "custom_auth.User"
 
 # DRF Settings
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [],  # Пока пусто — создадим JWT позже
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "custom_auth.authentication.JWTAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",  # Разрешаем всё пока нет авторизации
+        "rest_framework.permissions.IsAuthenticated",
     ],
 }
 
