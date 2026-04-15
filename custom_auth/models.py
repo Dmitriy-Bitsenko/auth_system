@@ -22,3 +22,27 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+
+
+class BlacklistedToken(models.Model):
+    """
+    Модель для хранения заблокированных (logout) токенов.
+    После logout токен попадает сюда и больше не принимается.
+    """
+
+    token = models.TextField("Токен", unique=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="blacklisted_tokens",
+        verbose_name="Пользователь",
+    )
+    expires_at = models.DateTimeField("Истекает", help_text="Когда токен истечёт")
+    created_at = models.DateTimeField("Создан", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Заблокированный токен"
+        verbose_name_plural = "Заблокированные токены"
+
+    def __str__(self):
+        return f"Token для {self.user.email} (истекает: {self.expires_at})"

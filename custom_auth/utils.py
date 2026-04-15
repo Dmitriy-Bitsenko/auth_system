@@ -3,7 +3,7 @@ import datetime
 import jwt
 from django.conf import settings
 
-from .models import User
+from .models import BlacklistedToken, User
 
 
 def generate_token(user):
@@ -37,17 +37,42 @@ def decode_token(token):
     return jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
 
 
+def is_token_blacklisted(token):
+    """
+    Проверяем, находится ли токен в блэклисте.
+    """
+    return BlacklistedToken.objects.filter(token=token).exists()
+
+
+def blacklist_token(token, user):
+    """
+    Добавляем токен в блэклист.
+    """
+    payload = decode_token(token)
+    expires_at = datetime.datetime.utcfromtimestamp(payload["exp"])
+    BlacklistedToken.objects.create(
+        token=token,
+        user=user,
+        expires_at=expires_at,
+    )
+
+
 def get_user_from_token(token):
     """
     Извлекаем пользователя из токена.
 
-    1. Декодируем токен → получаем user_id
-    2. Ищем пользователя в БД
-    3. Проверяем, что он активен (is_active=True)
+    1. Проверяем, не в блэклисте ли токен
+    2. Декодируем токен → получаем user_id
+    3. Ищем пользователя в БД
+    4. Проверяем, что он активен (is_active=True)
 
     Возвращает User или None.
     """
     try:
+        # Проверяем блэклист
+        if is_token_blacklisted(token):
+            return None
+
         payload = decode_token(token)
         user = User.objects.get(id=payload["user_id"], is_active=True)
         return user
