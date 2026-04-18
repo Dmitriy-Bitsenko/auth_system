@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+import bcrypt
+
 
 class User(AbstractUser):
     """Кастомная модель пользователя."""
@@ -9,12 +11,31 @@ class User(AbstractUser):
     email = models.EmailField("Email", unique=True)
     is_active = models.BooleanField("Активен", default=True)
 
-    # Переопределяем — email вместо username
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
-
-    # Убираем username из полей
     username = None
+
+    def check_password(self, raw_password):
+        """
+        Проверяем пароль с помощью bcrypt.
+        """
+        password_bytes = raw_password.encode("utf-8")
+        hash_str = self.password
+        if not hash_str.startswith("bcrypt$"):
+            return False
+        parts = hash_str.split("$")
+        stored_hash = f"${parts[1]}${parts[2]}${parts[3]}".encode("utf-8")
+        return bcrypt.checkpw(password_bytes, stored_hash)
+
+    def set_password(self, raw_password):
+        """
+        Хешируем пароль с помощью bcrypt.
+        """
+        password_bytes = raw_password.encode("utf-8")
+        password_hash = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+        hash_str = password_hash.decode("utf-8")
+        parts = hash_str.split("$")
+        self.password = f"bcrypt${parts[1]}${parts[2]}${parts[3]}"
 
     def __str__(self):
         return f"{self.last_name} {self.first_name}"

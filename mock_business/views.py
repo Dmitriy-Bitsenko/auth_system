@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -13,8 +13,17 @@ class MockUsersListView(generics.GenericAPIView):
     """
 
     permission_classes = [HasAccess]
-    business_element = "users"
-    required_permission = "read"
+
+    def get_permissions(self):
+        """
+        Динамически устанавливаем атрибуты для permission.
+        """
+        perms = super().get_permissions()
+        for permission in perms:
+            if isinstance(permission, HasAccess):
+                permission.business_element = "users"
+                permission.required_permission = "read"
+        return perms
 
     def get(self, request, *args, **kwargs):
         return Response(
@@ -36,8 +45,14 @@ class MockOrdersListView(generics.GenericAPIView):
     """
 
     permission_classes = [HasAccess]
-    business_element = "orders"
-    required_permission = "read"
+
+    def get_permissions(self):
+        perms = super().get_permissions()
+        for permission in perms:
+            if isinstance(permission, HasAccess):
+                permission.business_element = "orders"
+                permission.required_permission = "read"
+        return perms
 
     def get(self, request, *args, **kwargs):
         return Response(
@@ -59,8 +74,14 @@ class MockReportsView(generics.GenericAPIView):
     """
 
     permission_classes = [HasAccess]
-    business_element = "reports"
-    required_permission = "read"
+
+    def get_permissions(self):
+        perms = super().get_permissions()
+        for permission in perms:
+            if isinstance(permission, HasAccess):
+                permission.business_element = "reports"
+                permission.required_permission = "read"
+        return perms
 
     def get(self, request, *args, **kwargs):
         return Response(

@@ -1,39 +1,70 @@
 # Environment
 .env
+.env.*
+.env.local
+.env.production
+
+# Python cache
+.env.staging
 
 # Python
+
+# IDE
 __pycache__/
 *.py[cod]
 *$py.class
 *.pyo
 *.so
+
+# PyCharm/IntelliJ project files
 *.egg-info/
+
+# Database
 dist/
 build/
 *.egg
 
+# Temp files
+.python-version
+
 # Virtual Environment
+
+# Qwen settings
 .venv/
+
+# Office and docs
 venv/
+
+# Log and plan
 ENV/
+env/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
 # Database
+*.sqlite3
+*.db
 db.sqlite3
 
 # Temp files
 token.txt
+*.tmp
+*.bak
 
 # Testing & Coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 *.log
+.mypy_cache/
+.ruff_cache/
+.tox/
 
 # Static & Media (generated)
 staticfiles/
@@ -41,6 +72,7 @@ media/
 
 # Translations
 *.mo
+*.pot
 
 # Documentation & Planning
 PLAN.md
@@ -48,5 +80,21 @@ LOG.md
 ТЗ*.docx
 
 # OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.stackdump
+
+# AI/Editor temp files
+*.tmp
+
+# Test scripts (optional - remove if you want to keep them)
+check_password.py
+test_*.py
+final_test.py
 .DS_Store
 Thumbs.db

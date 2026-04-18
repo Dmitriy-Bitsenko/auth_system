@@ -1,4 +1,3 @@
-import bcrypt
 from rest_framework import serializers
 
 from .models import User
@@ -47,7 +46,6 @@ class ProfileSerializer(serializers.ModelSerializer):
                     {"new_password_confirm": "Новые пароли не совпадают"}
                 )
 
-        # Проверяем уникальность email при смене
         if "email" in data and data["email"] != self.instance.email:
             if User.objects.filter(email=data["email"]).exists():
                 raise serializers.ValidationError(
@@ -63,17 +61,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         new_password = validated_data.pop("new_password", None)
         validated_data.pop("new_password_confirm", None)
 
-        # Обновляем обычные поля
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        # Если указан новый пароль — хешируем через bcrypt
+
         if new_password:
-            password_bytes = new_password.encode("utf-8")
-            password_hash = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-            hash_str = password_hash.decode("utf-8")
-            parts = hash_str.split("$")
-            instance.password = f"bcrypt${parts[1]}${parts[2]}${parts[3]}"
+            instance.set_password(new_password)
 
         instance.save()
         return instance
@@ -91,13 +84,8 @@ class DeleteAccountSerializer(serializers.Serializer):
         user = self.context["request"].user
         password = data["password"]
 
-        # Проверяем пароль
-        stored_password = user.password
-        parts = stored_password.split("$")
-        # parts = ["bcrypt", "2b", "12", "salt+hash"]
-        bcrypt_hash = f"${parts[1]}${parts[2]}${parts[3]}"
 
-        if not bcrypt.checkpw(password.encode("utf-8"), bcrypt_hash.encode("utf-8")):
+        if not user.check_password(password):
             raise serializers.ValidationError({"password": "Неверный пароль"})
 
         return data
@@ -118,12 +106,12 @@ class RegisterSerializer(serializers.Serializer):
     Здесь мы описываем какие данные принимаем и как валидируем.
     """
 
-    # Поля, которые ждём от клиента в POST-запросе
+
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150)
     middle_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)  # write_only = не показываем в ответе
+    password = serializers.CharField(write_only=True, min_length=8)  # write_only = не показываем в ответе
     password_confirm = serializers.CharField(write_only=True)
 
     def validate(self, data):
@@ -135,7 +123,7 @@ class RegisterSerializer(serializers.Serializer):
         if data["password"] != data["password_confirm"]:
             raise serializers.ValidationError({"password_confirm": "Пароли не совпадают"})
 
-        # Проверяем, нет ли уже такого email
+
         if User.objects.filter(email=data["email"]).exists():
             raise serializers.ValidationError({"email": "Этот email уже занят"})
 
@@ -146,30 +134,15 @@ class RegisterSerializer(serializers.Serializer):
         Создаём пользователя в БД.
         validated_data — данные, прошедшие validate() (без password_confirm).
         """
-        validated_data.pop("password_confirm")  # убираем — он не нужен для создания
+        validated_data.pop("password_confirm")  
 
-        # Хешируем пароль через bcrypt
-        password_bytes = validated_data["password"].encode("utf-8")
-        password_hash = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-
-        # Создаём пользователя. set_unusable_password() отключаем стандартный
-        # Django-хеш, потом сохраним свой bcrypt-хеш напрямую
         user = User(
             first_name=validated_data["first_name"],
             last_name=validated_data["last_name"],
             middle_name=validated_data.get("middle_name", ""),
             email=validated_data["email"],
         )
-        user.set_unusable_password()  # отключаем стандартный Django-пароль
-        user.save()
-
-        # Сохраняем bcrypt-хеш напрямую в поле password
-        # bcrypt формат: $2b$12$salt+hash
-        hash_str = password_hash.decode("utf-8")
-        # parts = ['', '2b', '12', 'salt+hash']
-        parts = hash_str.split("$")
-        django_format = f"bcrypt${parts[1]}${parts[2]}${parts[3]}"
-        user.password = django_format
+        user.set_password(validated_data["password"])
         user.save()
 
         return user
@@ -188,29 +161,21 @@ class LoginSerializer(serializers.Serializer):
         email = data["email"]
         password = data["password"]
 
-        # Ищем пользователя по email
+
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             raise serializers.ValidationError({"email": "Неверный email или пароль"})
 
-        # Проверяем пароль
+
         if not user.is_active:
             raise serializers.ValidationError({"email": "Аккаунт заблокирован"})
 
-        # bcrypt.checkpw сравнивает введённый пароль с хешем из БД
-        # Django хранит: bcrypt$2b$12$salt+hash
-        stored_password = user.password
 
-        # Разбираем django-формат обратно в bcrypt-строку
-        parts = stored_password.split("$")
-        # parts = ["bcrypt", "2b", "12", "salt+hash"]
-        bcrypt_hash = f"${parts[1]}${parts[2]}${parts[3]}"
-
-        if not bcrypt.checkpw(password.encode("utf-8"), bcrypt_hash.encode("utf-8")):
+        if not user.check_password(password):
             raise serializers.ValidationError({"email": "Неверный email или пароль"})
 
-        # Генерируем JWT-токен
+
         token = generate_token(user)
 
         return {

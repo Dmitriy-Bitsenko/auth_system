@@ -9,18 +9,21 @@ class HasAccess(permissions.BasePermission):
 
     Использование:
         permission_classes = [HasAccess]
-        required_permission = 'read'  # или 'create', 'update', 'delete'
-        business_element = 'users'   # имя элемента из БД
+        required_permission = 'read'
+        business_element = 'users'
     """
 
     required_permission = None
     business_element = None
 
+    def __init__(self):
+        pass
+
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        # Получаем роли пользователя
+
         user_roles = UserRole.objects.filter(user=request.user).values_list(
             "role_id", flat=True
         )
@@ -28,7 +31,6 @@ class HasAccess(permissions.BasePermission):
         if not user_roles:
             return False
 
-        # Проверяем есть ли у хотя бы одной роли нужное право
         return AccessRoleRule.objects.filter(
             role_id__in=user_roles,
             element__name=self.business_element,

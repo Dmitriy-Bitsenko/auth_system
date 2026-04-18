@@ -11,12 +11,12 @@
 
 from access_control.models import AccessRoleRule, BusinessElement, Role, UserRole
 from custom_auth.models import User
+import bcrypt
 
 
 def run():
     print("Создаю тестовые данные...")
 
-    # --- Роли ---
     admin_role, _ = Role.objects.get_or_create(
         name="admin", defaults={"description": "Полный доступ ко всему"}
     )
@@ -28,7 +28,6 @@ def run():
     )
     print(f"Роли: {admin_role}, {manager_role}, {viewer_role}")
 
-    # --- Бизнес-элементы ---
     users_el, _ = BusinessElement.objects.get_or_create(
         name="users", defaults={"description": "Пользователи системы"}
     )
@@ -40,9 +39,7 @@ def run():
     )
     print(f"Элементы: {users_el}, {orders_el}, {reports_el}")
 
-    # --- Правила доступа ---
 
-    # ADMIN → всё
     for element in [users_el, orders_el, reports_el]:
         AccessRoleRule.objects.get_or_create(
             role=admin_role,
@@ -58,7 +55,6 @@ def run():
             },
         )
 
-    # MANAGER → чтение/создание/обновление заказов и отчётов, чтение пользователей
     AccessRoleRule.objects.get_or_create(
         role=manager_role,
         element=users_el,
@@ -85,7 +81,6 @@ def run():
         },
     )
 
-    # VIEWER → только чтение всего
     for element in [users_el, orders_el, reports_el]:
         AccessRoleRule.objects.get_or_create(
             role=viewer_role,
@@ -95,7 +90,6 @@ def run():
 
     print("Правила доступа созданы")
 
-    # --- Тестовые пользователи ---
     admin_user, _ = User.objects.get_or_create(
         email="admin@test.com",
         defaults={
@@ -105,7 +99,7 @@ def run():
             "is_superuser": True,
         },
     )
-    admin_user.set_password("admin123")
+    admin_user.password = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
     admin_user.save()
 
     manager_user, _ = User.objects.get_or_create(
@@ -115,7 +109,7 @@ def run():
             "last_name": "Продаж",
         },
     )
-    manager_user.set_password("manager123")
+    manager_user.password = bcrypt.hashpw("manager123".encode(), bcrypt.gensalt()).decode()
     manager_user.save()
 
     viewer_user, _ = User.objects.get_or_create(
@@ -125,12 +119,11 @@ def run():
             "last_name": "Простой",
         },
     )
-    viewer_user.set_password("viewer123")
+    viewer_user.password = bcrypt.hashpw("viewer123".encode(), bcrypt.gensalt()).decode()
     viewer_user.save()
 
     print("Пользователи созданы")
 
-    # --- Связи User ↔ Role ---
     UserRole.objects.get_or_create(user=admin_user, role=admin_role)
     UserRole.objects.get_or_create(user=manager_user, role=manager_role)
     UserRole.objects.get_or_create(user=viewer_user, role=viewer_role)

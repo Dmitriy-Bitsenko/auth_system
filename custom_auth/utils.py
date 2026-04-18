@@ -2,6 +2,7 @@ import datetime
 
 import jwt
 from django.conf import settings
+from django.utils import timezone
 
 from .models import BlacklistedToken, User
 
@@ -18,7 +19,7 @@ def generate_token(user):
     """
     payload = {
         "user_id": user.id,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=settings.JWT_EXPIRE_HOURS),
+        "exp": timezone.now() + datetime.timedelta(hours=settings.JWT_EXPIRE_HOURS),
     }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
@@ -49,7 +50,7 @@ def blacklist_token(token, user):
     Добавляем токен в блэклист.
     """
     payload = decode_token(token)
-    expires_at = datetime.datetime.utcfromtimestamp(payload["exp"])
+    expires_at = timezone.make_aware(datetime.datetime.fromtimestamp(payload["exp"]))
     BlacklistedToken.objects.create(
         token=token,
         user=user,
@@ -69,7 +70,6 @@ def get_user_from_token(token):
     Возвращает User или None.
     """
     try:
-        # Проверяем блэклист
         if is_token_blacklisted(token):
             return None
 

@@ -59,12 +59,12 @@ class LogoutView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        # Получаем токен из заголовка
+        
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else None
 
         if token:
-            # Добавляем токен в блэклист
+            
             blacklist_token(token, request.user)
 
         return Response(

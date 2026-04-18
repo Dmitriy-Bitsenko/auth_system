@@ -71,7 +71,6 @@ class AccessRoleRule(models.Model):
         verbose_name="Бизнес-объект",
     )
 
-    # CRUD разрешения
     read_perm = models.BooleanField("Чтение", default=False)
     read_all_perm = models.BooleanField("Чтение всех", default=False)
     create_perm = models.BooleanField("Создание", default=False)

@@ -12,10 +12,8 @@ from .views import (
 )
 
 urlpatterns = [
-    # Роли
     path("roles/", RoleListCreateView.as_view(), name="roles-list"),
     path("roles/<int:pk>/", RoleDetailView.as_view(), name="role-detail"),
-    # Бизнес-элементы
     path(
         "elements/",
         BusinessElementListCreateView.as_view(),
@@ -26,7 +24,6 @@ urlpatterns = [
         BusinessElementDetailView.as_view(),
         name="element-detail",
     ),
-    # Правила доступа
     path(
         "rules/",
         AccessRuleListCreateView.as_view(),
@@ -37,7 +34,6 @@ urlpatterns = [
         AccessRuleDetailView.as_view(),
         name="rule-detail",
     ),
-    # Роли пользователей
     path(
         "user-roles/",
         UserRoleListCreateView.as_view(),

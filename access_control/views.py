@@ -1,6 +1,4 @@
 from rest_framework import generics, permissions
-from rest_framework.response import Response
-from rest_framework import status
 
 from .models import AccessRoleRule, BusinessElement, Role, UserRole
 from .serializers import (
@@ -22,9 +20,6 @@ class IsAdmin(permissions.BasePermission):
         ).exists()
 
 
-# --- CRUD для Ролей (только админ) ---
-
-
 class RoleListCreateView(generics.ListCreateAPIView):
     """GET/POST — список ролей и создание новых (admin)."""
 
@@ -39,9 +34,6 @@ class RoleDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     permission_classes = [IsAdmin]
-
-
-# --- CRUD для Бизнес-элементов (только админ) ---
 
 
 class BusinessElementListCreateView(generics.ListCreateAPIView):
@@ -60,8 +52,6 @@ class BusinessElementDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdmin]
 
 
-# --- CRUD для Правил доступа (только админ) ---
-
 
 class AccessRuleListCreateView(generics.ListCreateAPIView):
     """GET/POST — список правил доступа (admin)."""
@@ -77,9 +67,6 @@ class AccessRuleDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = AccessRoleRule.objects.all()
     serializer_class = AccessRoleRuleSerializer
     permission_classes = [IsAdmin]
-
-
-# --- Управление ролями пользователей (только админ) ---
 
 
 class UserRoleListCreateView(generics.ListCreateAPIView):
